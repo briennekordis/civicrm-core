@@ -443,6 +443,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
         CRM_Core_BAO_CMSUser::buildForm($this, $profileID, TRUE);
       }
     }
+    $isHonor = FALSE;
     if ($this->_pcpId && empty($this->_ccid)) {
       if (CRM_PCP_BAO_PCP::displayName($this->_pcpId)) {
         $pcp_supporter_text = CRM_PCP_BAO_PCP::getPcpSupporterText($this->_pcpId, $this->_id, 'contribute');
@@ -451,7 +452,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       $prms = ['id' => $this->_pcpId];
       CRM_Core_DAO::commonRetrieve('CRM_PCP_DAO_PCP', $prms, $pcpInfo);
       if ($pcpInfo['is_honor_roll']) {
-        $this->assign('isHonor', TRUE);
+        $isHonor = TRUE;
         $this->add('checkbox', 'pcp_display_in_roll', ts('Show my contribution in the public honor roll'), NULL, NULL,
           ['onclick' => "showHideByValue('pcp_display_in_roll','','nameID|nickID|personalNoteID','block','radio',false); pcpAnonymous( );"]
         );
@@ -462,6 +463,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
         $this->addField('pcp_personal_note', ['entity' => 'ContributionSoft', 'context' => 'create', 'style' => 'height: 3em; width: 40em;']);
       }
     }
+    $this->assign('isHonor', $isHonor);
     if (empty($this->_values['fee']) && empty($this->_ccid)) {
       throw new CRM_Core_Exception(ts('This page does not have any price fields configured or you may not have permission for them. Please contact the site administrator for more details.'));
     }
