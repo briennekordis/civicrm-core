@@ -241,15 +241,19 @@ class CRM_Member_Form_MembershipBlock extends CRM_Contribute_Form_ContributionPa
       }
     }
     if (!empty($params['member_is_active'])) {
-
+      $priceSetEntity = \Civi\Api4\PriceSetEntity::get(FALSE)
+        ->addSelect('price_set_id', 'price_set.extends')
+        ->addJoin('PriceSet AS price_set', 'LEFT', ['entity_id', '=', 'price_set.id'])
+        ->addWhere('entity_table', '=', 'civicrm_contribution_page')
+        ->addWhere('entity_id', '=', $contributionPageId)
+        ->execute()
+        ->first();
+      $setID = $priceSetEntity['price_set_id'];
       // don't allow price set w/ membership signup, CRM-5095
-      if ($contributionPageId && ($setID = CRM_Price_BAO_PriceSet::getFor('civicrm_contribution_page', $contributionPageId, NULL, 1))) {
-
-        $extends = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $setID, 'extends');
-        // getFieldValue() returns a string padded with non printable characters, so turn that string into an array.
-        $extendsArr = CRM_Utils_Array::explodePadded($extends);
+      if ($contributionPageId && $setID) {
+        $extends = $priceSetEntity['price_set.extends'];
         // Check if the component id is in the array.
-        if (!in_array(CRM_Core_Component::getComponentID('CiviMember'), $extendsArr)) {
+        if (!in_array(CRM_Core_Component::getComponentID('CiviMember'), $extends)) {
           $errors['member_is_active'] = ts('You cannot enable both Membership Signup and a Contribution Price Set on the same online contribution page.');
           return $errors;
         }
